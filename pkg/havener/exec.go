@@ -26,6 +26,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/pkg/errors"
@@ -87,11 +88,26 @@ func TraverseStructureAndProcessOperators(input interface{}) (interface{}, error
 			return nil, err
 		}
 
+		if isPotentialBoolean(input) {
+			input, _ = strconv.ParseBool(input.(string))
+		}
+
 	case nil:
 		input, err = map[interface{}]interface{}{}, nil
 	}
 
 	return input, err
+}
+
+func isPotentialBoolean(input interface{}) bool {
+	shellRegexp := regexp.MustCompile(`(false|true)`)
+	switch obj := input.(type) {
+	case string:
+		if matches := shellRegexp.FindAllStringSubmatch(obj, -1); len(matches) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // ProcessOperators processes the input string and calls
